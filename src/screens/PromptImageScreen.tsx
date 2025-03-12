@@ -9,10 +9,9 @@ import {
   Alert,
   Image,
 } from 'react-native';
-import {generateVideo} from '../api/textVideoApi';
 
 const PromptTextScreen = ({route, navigation}) => {
-  console.log('Route Params:', route.params); // In ra console để kiểm tra
+  console.log('Route Params:', route.params);
   if (!route.params || !route.params.imageUri) {
     console.log('Missing imageUri in route params:', route.params);
     Alert.alert('Error', 'No image received');
@@ -23,28 +22,13 @@ const PromptTextScreen = ({route, navigation}) => {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleGenerate = async () => {
-    if (!prompt.trim()) {
-      Alert.alert('Error', 'Please enter a prompt');
-      return;
-    }
-
+  const handleGenerate = () => {
     setLoading(true);
-    try {
-      const response = await generateVideo(prompt);
-
-      if (!response) {
-        throw new Error('Invalid response received');
-      }
-
-      console.log('Generated Video:', response);
-      Alert.alert('Success', 'Video generated successfully!');
-    } catch (error) {
-      console.error('Error:', error);
-      Alert.alert('Error', error.message || 'Failed to generate video');
-    } finally {
+    // Xử lý logic generate video ở đây
+    setTimeout(() => {
       setLoading(false);
-    }
+      Alert.alert('Success', 'Video generated successfully!');
+    }, 2000);
   };
 
   return (

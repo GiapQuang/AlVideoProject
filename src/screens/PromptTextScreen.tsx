@@ -26,28 +26,34 @@ const PromptTextScreen = () => {
     }
 
     setLoading(true);
+    console.log('🔵 Bắt đầu tạo video...');
+
     try {
       const taskId = await generateVideo(prompt);
       Alert.alert('Thành công', 'Đang tạo video, vui lòng đợi...');
-      // Kiểm tra trạng thái liên tục
+
       const interval = setInterval(async () => {
+        console.log('🟡 Đang kiểm tra trạng thái video...');
         const statusResponse = await checkVideoStatus(taskId);
-        console.log('Trạng thái:', statusResponse.status);
+
+        console.log('🔍 Trạng thái video:', statusResponse.status);
 
         if (statusResponse.status === 'Success') {
           clearInterval(interval);
+          console.log('✅ Video đã sẵn sàng! Đang tải link...');
           const url = await downloadVideo(statusResponse.file_id);
           setVideoUrl(url);
           Alert.alert('Thành công', 'Video đã sẵn sàng để tải xuống');
           setLoading(false);
         } else if (statusResponse.status === 'Fail') {
           clearInterval(interval);
+          console.error('❌ Tạo video thất bại');
           Alert.alert('Lỗi', 'Tạo video thất bại');
           setLoading(false);
         }
       }, 5000);
     } catch (error) {
-      console.error(error);
+      console.error('❌ Lỗi khi tạo video:', error);
       Alert.alert('Lỗi', error.message);
       setLoading(false);
     }

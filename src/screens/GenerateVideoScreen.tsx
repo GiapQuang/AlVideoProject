@@ -8,6 +8,7 @@ import {
   StyleSheet,
   PermissionsAndroid,
   Platform,
+  Alert,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {launchImageLibrary} from 'react-native-image-picker';
@@ -33,20 +34,37 @@ const options = [
 const requestPermission = async () => {
   if (Platform.OS === 'android') {
     try {
-      const permission =
+      const permissions =
         Platform.Version >= 33
-          ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES // Android 13+
-          : PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE; // Android 12 trở xuống
+          ? [
+              PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+              PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
+            ]
+          : [
+              PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+              PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+            ];
 
-      const granted = await PermissionsAndroid.request(permission, {
-        title: 'Permission Required',
-        message: 'App needs access to your photos to continue',
-        buttonPositive: 'OK',
-      });
+      const granted = await PermissionsAndroid.requestMultiple(permissions);
 
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
+      const allGranted = Object.values(granted).every(
+        result => result === PermissionsAndroid.RESULTS.GRANTED,
+      );
+
+      if (!allGranted) {
+        Alert.alert(
+          'Permission Denied',
+          'You need to grant storage permissions to continue.',
+        );
+        return false;
+      }
+      return true;
     } catch (err) {
-      console.warn('Permission error:', err);
+      console.error('Permission error:', err);
+      Alert.alert(
+        'Error',
+        'Something went wrong while requesting permissions.',
+      );
       return false;
     }
   }
@@ -55,15 +73,18 @@ const requestPermission = async () => {
 
 const GenerateVideoScreen = () => {
   const navigation = useNavigation();
-  const [hasPermission, setHasPermission] = useState(false);
 
   const handlePress = async id => {
     if (id === '1') {
       navigation.navigate('PromptTextScreen');
+      return;
     }
+
     if (id === '2') {
-      // Chỉ yêu cầu quyền khi người dùng bấm vào nút
+      // Chỉ yêu cầu quyền khi người dùng bấm vào Image to Video
       const granted = await requestPermission();
+      console.log('Permission granted:', granted);
+
       if (!granted) {
         Alert.alert('Error', 'Permission denied');
         return;
@@ -71,17 +92,28 @@ const GenerateVideoScreen = () => {
 
       launchImageLibrary({mediaType: 'photo'}, response => {
         console.log('Image Picker Response:', response);
+
         if (response.didCancel) {
           console.log('User cancelled image picker');
           return;
         }
+
         if (response.errorMessage) {
           console.log('Image Picker Error:', response.errorMessage);
+          Alert.alert('Error', response.errorMessage);
           return;
         }
+
         if (response.assets && response.assets.length > 0) {
           const selectedImage = response.assets[0].uri;
           console.log('Selected Image:', selectedImage);
+
+          if (!selectedImage) {
+            Alert.alert('Error', 'No image selected');
+            return;
+          }
+
+          // Chuyển màn hình với ảnh đã chọn
           navigation.navigate('PromptImageScreen', {imageUri: selectedImage});
         } else {
           console.log('No image selected');
