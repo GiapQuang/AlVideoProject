@@ -1,60 +1,63 @@
 import axios from 'axios';
 
 const API_KEY =
-  'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJHcm91cE5hbWUiOiJHacOhcCDEkOG7lyBRdWFuZyIsIlVzZXJOYW1lIjoiR2nDoXAgxJDhu5cgUXVhbmciLCJBY2NvdW50IjoiIiwiU3ViamVjdElEIjoiMTg5OTMxODE3NjM5MTM2OTA1OSIsIlBob25lIjoiIiwiR3JvdXBJRCI6IjE4OTkzMTgxNzYzODcxNzQ3NTUiLCJQYWdlTmFtZSI6IiIsIk1haWwiOiJxdWFuZ2dpYXBhcm1vckBnbWFpbC5jb20iLCJDcmVhdGVUaW1lIjoiMjAyNS0wMy0xMSAxNTowNzoyNCIsIlRva2VuVHlwZSI6MSwiaXNzIjoibWluaW1heCJ9.INx5orMBTAyF6JEhv4pLXNGeXSOv8BhtLZqwJOhipmbQjqun5VN42ekE-IVs1TD753W3L3mn05u2iLxXSTtvarws3wsbrRtbLY1G5KrsO3brXOEUMu18bqcNmV5zMLEsFZ9FMIydSzldrSf_cwrT-fObW96DFfpi93ohmn640zo6vPxWnRH_MSM0cntjWh8uQ4z_6Z0b32rwJBWQa-tIAEV2iNj4H07qJgXbxo2slsHePt-IHD8FVcaJBPD6RX-NfUEZUk9z4Y-oOXcQXlO4rt6NKrII_iDIOr7QnJ8T8TkkJ8aL-5gRjEbNi7mRpp4ICOfnBZFbuCocyg-tv6qslQ';
+  'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJHcm91cE5hbWUiOiJHacOhcCDEkOG7lyBRdWFuZyIsIlVzZXJOYW1lIjoiR2nDoXAgxJDhu5cgUXVhbmciLCJBY2NvdW50IjoiIiwiU3ViamVjdElEIjoiMTg5OTMxODE3NjM5MTM2OTA1OSIsIlBob25lIjoiIiwiR3JvdXBJRCI6IjE4OTkzMTgxNzYzODcxNzQ3NTUiLCJQYWdlTmFtZSI6IiIsIk1haWwiOiJxdWFuZ2dpYXBhcm1vckBnbWFpbC5jb20iLCJDcmVhdGVUaW1lIjoiMjAyNS0wMy0xMiAxNTo0NjoyOSIsIlRva2VuVHlwZSI6MSwiaXNzIjoibWluaW1heCJ9.oveWIe0nWD2B3TGWxPQa3xh1zCwvz8BBX_94cNb9TTU_MYPrp3amUjG7VNtjjT021HsnbX94qtNW0BoBpFhvN-fpR-EsCMLq5WmcVmKxvZFfg3M43hbM57lCQnwhuuSyM72NDhA_JY5k4Rv4WQMEB72FlXcsBXmtzeuOsyxrdDyfgis5bleWOaDHMwneGr901cAFcHLrqXiv7j-0CEHfc-BQD50StSeFyoUrfiBvms9Jhha794O5Zz2LjMzoZbQ7PGOmJ2Geg3ONGMQ9RFzeMmSdmppr5ZjpVReK1SzMY43gfhCj91fbwOkB72OXMK0qbUMJ8I-AUoIOIhkdK_rc9g';
 const BASE_URL = 'https://api.minimaxi.chat/v1';
 
-export const invokeVideoGeneration = async (
-  prompt: string,
-): Promise<string> => {
-  console.log('Calling API with prompt:', prompt);
+// 🟢 Tạo video từ prompt
+export const generateVideo = async prompt => {
   try {
     const response = await axios.post(
       `${BASE_URL}/video_generation`,
-      {prompt, model: 'T2V-01'},
+      {
+        prompt,
+        model: 'T2V-01',
+      },
       {
         headers: {
-          Authorization: `Bearer ${API_KEY}`,
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${API_KEY}`,
         },
       },
     );
-    console.log('API response:', response.data);
+
     return response.data.task_id;
   } catch (error) {
-    console.error('Error invoking video generation:', error);
-    throw error;
+    console.error('Lỗi khi tạo video:', error);
+    throw new Error('Không thể tạo video');
   }
 };
 
-export const queryVideoGeneration = async (
-  taskId: string,
-): Promise<{status: string; file_id?: string}> => {
+// 🟡 Kiểm tra trạng thái video
+export const checkVideoStatus = async taskId => {
   try {
-    const response = await axios.get(
-      `${BASE_URL}/query/video_generation?task_id=${taskId}`,
-      {
-        headers: {Authorization: `Bearer ${API_KEY}`},
+    const response = await axios.get(`${BASE_URL}/query/video_generation`, {
+      params: {task_id: taskId},
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
       },
-    );
+    });
+
     return response.data;
   } catch (error) {
-    console.error('Error querying video generation:', error);
-    throw error;
+    console.error('Lỗi khi kiểm tra trạng thái video:', error);
+    throw new Error('Không thể kiểm tra trạng thái video');
   }
 };
 
-export const fetchVideoResult = async (fileId: string): Promise<string> => {
+// 🔵 Tải video về
+export const downloadVideo = async fileId => {
   try {
-    const response = await axios.get(
-      `${BASE_URL}/files/retrieve?file_id=${fileId}`,
-      {
-        headers: {Authorization: `Bearer ${API_KEY}`},
+    const response = await axios.get(`${BASE_URL}/files/retrieve`, {
+      params: {file_id: fileId},
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
       },
-    );
+    });
+
     return response.data.file.download_url;
   } catch (error) {
-    console.error('Error fetching video result:', error);
-    throw error;
+    console.error('Lỗi khi tải video:', error);
+    throw new Error('Không thể tải video');
   }
 };
